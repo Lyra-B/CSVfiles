@@ -2,30 +2,32 @@ require 'pry'
 
 class Reader
   attr_accessor :order_list
+  attr_accessor :supplier_list
 
-  def initialize (order_list = [])
+  def initialize (order_list = [], supplier_list = [])
   	@order_list = order_list
+    @supplier_list = supplier_list
   end
 
 	def read(file_path)
     File.open(file_path) do |f|
       f.each_line do |l|
-        tokens =  l.split(",")
+        tokens = l.split(',')
+        # binding.pry
+        # tokens =  l.split(',')
+        # binding.pry
         unless tokens[0] == "PO_NUMBER"
           order = Order.new(
-            {:po_number => tokens[0],
-            :agency_name => tokens[1],
-            :nigp_description => tokens[2],
-            :po_total_amount => tokens[3],
-            :order_date => tokens[4],
-            :supplier => Supplier.new( {:name => tokens[5],
-            :address => Address.new({:full_address => tokens[6], :city =>tokens[7],
-            :state => tokens[8]})})})
+          {:po_number => tokens[-tokens.length],
+          :agency_name => tokens[1-tokens.length],
+          :nigp_description => tokens[2-tokens.length, tokens.length-8].join(""),
+          :po_total_amount => tokens[-6],
+          :order_date => tokens[-5],
+          :supplier => Supplier.new({:name => tokens[-4],
+          :address => Address.new({:full_address => tokens[-3], :city =>tokens[-2],
+          :state => tokens[-1]})})})
           @order_list << order
-        #binding.pry
-
-        # order = Order.new({:blah => "blah", :supplier => Supplier.new(:name => "Makis",
-        # 	:address => Address.new({:full_address => "blah", :city = "Athens"}))})
+          @supplier_list << order.supplier
         end
       end
     end
@@ -36,6 +38,15 @@ class Reader
   end
 
   def unique_suppliers
+  #   @supplier_list.split
+    puts "#{@supplier_list.uniq.length}"
+    # @supplier_list.each do |l|
+    #   puts "#{l}"
+    # end
+    # uniq_sup = @supplier_list.uniq
+    # # uniq_sup.each do |l|
+    # #   puts "#{l}"
+    # # end
   end
 end
 
@@ -48,17 +59,9 @@ class Order
 	attr_accessor :supplier
 
 	def initialize(options = {})
-  #po_number, agency_name, nigp_description, po_total_amount,
-	#order_date,supplier)
 		options.keys.each do |method_name|
       self.send :"#{method_name}=", options[method_name]
     end
-	# 	@po_number = options[:po_number]
-	# 	@agency_name = options [:agency_name]
-	# 	@nigp_description = option[:nigp_description]
-	# 	@po_total_amount = options[:po_total_amount]
-	# 	@order_date = options [:order_date]
-	# 	@supplier = options[:supplier]
   end
 end
 
@@ -70,8 +73,6 @@ class Supplier
 		name_address.keys.each do |method_name|
       self.send :"#{method_name}=", name_address[method_name]
     end
-		# @name = name
-		# @address = address
 	end
 end
 
@@ -84,9 +85,6 @@ class Address
 		address.keys.each do |method_name|
       self.send :"#{method_name}=", address[method_name]
     end
-		# @full_address = address[:full_address]
-		# @city = address[:city]
-		# @state = address[:state]
 	end
 end
 
@@ -94,3 +92,4 @@ reader_one = Reader.new
 reader_one.read "data.csv"
 
 reader_one.order_amount
+reader_one.unique_suppliers
