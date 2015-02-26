@@ -12,41 +12,32 @@ class Reader
 	def read(file_path)
     File.open(file_path) do |f|
       f.each_line do |l|
-        tokens = l.split(',')
-        # binding.pry
-        # tokens =  l.split(',')
-        # binding.pry
-        unless tokens[0] == "PO_NUMBER"
+        tokens = l.split(',$')
+        info_one = tokens[0].split(',')
+        info_two = tokens[1].split(',') if tokens[1]
+        unless info_one[0] == "PO_NUMBER"
           order = Order.new(
-          {:po_number => tokens[-tokens.length],
-          :agency_name => tokens[1-tokens.length],
-          :nigp_description => tokens[2-tokens.length, tokens.length-8].join(""),
-          :po_total_amount => tokens[-6],
-          :order_date => tokens[-5],
-          :supplier => Supplier.new({:name => tokens[-4],
-          :address => Address.new({:full_address => tokens[-3], :city =>tokens[-2],
-          :state => tokens[-1]})})})
+          {:po_number => info_one[0],
+          :agency_name => info_one[1],
+          :nigp_description => info_one[2, info_one.length-2].join(""),
+          :po_total_amount => "${info_two[0]}",
+          :order_date => info_two[1],
+          :supplier => Supplier.new({:name => info_two[2],
+          :address => Address.new({:full_address => info_two[3,info_two.length-5], :city =>info_two[-2],
+          :state => info_two[-1]})})})
           @order_list << order
-          @supplier_list << order.supplier
+          @supplier_list << order.supplier.name
         end
       end
     end
 	end
 
   def order_amount
-  	puts "#{@order_list.length}"
+  	puts "Number of Orders:#{@order_list.length}"
   end
 
   def unique_suppliers
-  #   @supplier_list.split
-    puts "#{@supplier_list.uniq.length}"
-    # @supplier_list.each do |l|
-    #   puts "#{l}"
-    # end
-    # uniq_sup = @supplier_list.uniq
-    # # uniq_sup.each do |l|
-    # #   puts "#{l}"
-    # # end
+    puts "Number of Suppliers:#{@supplier_list.uniq.length}"
   end
 end
 
